@@ -1,5 +1,5 @@
-// First iteration of a user interface display written by Jack Hotchkiss
-// 11/6/22
+// User interface display written by Jack Hotchkiss
+// Last updated: 11/8/22
 
 
 #include <SPI.h>
@@ -7,27 +7,30 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 #include <String.h>
+#include <DHT.h>
 
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
 #define SCREEN_HEIGHT 64 // OLED display height, in pixels
-
-// Declaration for an SSD1306 display connected to I2C (SDA, SCL pins)
+#define DHTPIN 2     // what pin we're connected to
+#define DHTTYPE DHT11   // DHT 11 
 #define OLED_RESET     -1 // Reset pin # (or -1 if sharing Arduino reset pin)
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
+DHT dht(DHTPIN, DHT11, 6);//connect dht out to d2 on board
+
 //getTemp will retrieve the current temperature data from the Sensors. This function can be expanded to properly retrieve temp data later.
-int getTemp(){
-    return random(70,80); //70 as minimum random value and 80 as maximum
+float getTemp(){
+    return dht.readTemperature(true); 
 }
 
 //getHum will retrieve the current humidity data from the Sensors. This function can be expanded to properly retrieve humidity data later.
-int getHum(){
-  return random(40,60); //40 as minimum random value and 60 as maximum
+float getHum(){
+  return dht.readHumidity(); 
 }
 
 void setup() {
-  Serial.begin(115200);
-
+  Serial.begin(9600);
+  dht.begin();
   // SSD1306_SWITCHCAPVCC = generate display voltage from 3.3V internally
   if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) { 
     Serial.println(F("SSD1306 allocation failed"));
@@ -41,6 +44,7 @@ void setup() {
     display.clearDisplay();
     timeBattery();
     display.drawLine(0, 10, 128, 10, WHITE);
+    Serial.print(getTemp());
     displayTemp(getTemp());
     displayHumidity(getHum());
     delay(1500);
@@ -64,7 +68,7 @@ void timeBattery(void) {
 }
 
 
-void displayTemp(int t) {
+void displayTemp(float t) {
 
   display.setTextSize(1);      // Normal 1:1 pixel scale
   display.setTextColor(WHITE); // Draw white text
@@ -80,7 +84,7 @@ void displayTemp(int t) {
 }
 
 
-void displayHumidity(int h) {
+void displayHumidity(float h) {
   display.setTextSize(1);      // Normal 1:1 pixel scale
   display.setTextColor(WHITE); // Draw white text
   display.setCursor(0, 0);     // Start at top-left corner
